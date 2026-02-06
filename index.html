@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion RH Universitaire</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        form { margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; }
+        input, select, button { padding: 8px; margin-top: 5px; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .role-select { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Application de Gestion RH Universitaire</h1>
+        
+        <!-- Sélection du rôle -->
+        <div id="role-selection" class="role-select">
+            <h2>Sélectionnez votre rôle</h2>
+            <select id="role">
+                <option value="">Choisir...</option>
+                <option value="admin">Agent Administratif</option>
+                <option value="employee">Employé</option>
+            </select>
+            <button onclick="login()">Se connecter</button>
+        </div>
+        
+        <!-- Dashboard Admin -->
+        <div id="admin-dashboard" class="hidden">
+            <h2>Dashboard Agent Administratif</h2>
+            <h3>Créer/Modifier Compte</h3>
+            <form id="account-form">
+                <label>ID Employé: <input type="text" id="emp-id" required></label>
+                <label>Nom: <input type="text" id="emp-name" required></label>
+                <label>Rôle: <select id="emp-role" required>
+                    <option value="enseignant">Enseignant</option>
+                    <option value="admin">Administratif</option>
+                    <option value="technique">Technique</option>
+                </select></label>
+                <label>Grade: <input type="text" id="emp-grade"></label>
+                <label>Statut: <input type="text" id="emp-statut"></label>
+                <button type="submit">Sauvegarder</button>
+            </form>
+            
+            <h3>Paramétrage Salaire</h3>
+            <form id="salary-form">
+                <label>ID Employé: <input type="text" id="sal-emp-id" required></label>
+                <label>Salaire de Base: <input type="number" id="base-salary" required></label>
+                <label>Volume Horaire: <input type="number" id="hours" required></label>
+                <label>Taux Horaire: <input type="number" id="hourly-rate" required></label>
+                <label>Primes: <input type="number" id="bonuses" required></label>
+                <label>Indemnités: <input type="number" id="indemnities" required></label>
+                <label>Retenues: <input type="number" id="deductions" required></label>
+                <button type="submit">Paramétrer</button>
+            </form>
+            
+            <h3>Valider Congés</h3>
+            <table id="leave-table">
+                <thead><tr><th>ID Employé</th><th>Type</th><th>Jours</th><th>Statut</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            
+            <h3>Calculer Salaire (Système)</h3>
+            <label>ID Employé: <input type="text" id="calc-emp-id"></label>
+            <button onclick="calculateSalary()">Calculer et Générer Bulletin</button>
+            <div id="salary-result"></div>
+        </div>
+        
+        <!-- Dashboard Employé -->
+        <div id="employee-dashboard" class="hidden">
+            <h2>Dashboard Employé</h2>
+            <h3>Déposer Demande de Congé</h3>
+            <form id="leave-form">
+                <label>Type: <select id="leave-type" required>
+                    <option value="annuel">Annuel</option>
+                    <option value="maladie">Maladie</option>
+                </select></label>
+                <label>Jours: <input type="number" id="leave-days" required></label>
+                <button type="submit">Déposer</button>
+            </form>
+            
+            <h3>Mes Congés</h3>
+            <table id="my-leaves">
+                <thead><tr><th>Type</th><th>Jours</th><th>Statut</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            
+            <h3>Mes Absences</h3>
+            <div id="absences">Aucune absence enregistrée.</div>
+        </div>
+    </div>
+
+    <script>
+        // Simulation de base de données avec localStorage
+        let employees = JSON.parse(localStorage.getItem('employees')) || {};
+        let leaves = JSON.parse(localStorage.getItem('leaves')) || [];
+        let currentUser = null;
+
+        // Fonction de connexion
+        function login() {
+            const role = document.getElementById('role').value;
+            if (!role) return alert('Sélectionnez un rôle.');
+            currentUser = role;
+            document.getElementById('role-selection').classList.add('hidden');
+            if (role === 'admin') {
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                loadLeaves();
+            } else {
+                document.getElementById('employee-dashboard').classList.remove('hidden');
+                loadMyLeaves();
+            }
+        }
+
+        // Sauvegarder compte (Admin)
+        document.getElementById('account-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('emp-id').value;
+            employees[id] = {
+                name: document.getElementById('emp-name').value,
+                role: document.getElementById('emp-role').value,
+                grade: document.getElementById('emp-grade').value,
+                statut: document.getElementById('emp-statut').value,
+                salary: employees[id]?.salary || {}
+            };
+            localStorage.setItem('employees', JSON.stringify(employees));
+            alert('Compte sauvegardé.');
+            this.reset();
+        });
+
+        // Paramétrage salaire (Admin)
+        document.getElementById('salary-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('sal-emp-id').value;
+            if (!employees[id]) return alert('Employé non trouvé.');
+            employees[id].salary = {
+                base: parseFloat(document.getElementById('base-salary').value),
+                hours: parseFloat(document.getElementById('hours').value),
+                rate: parseFloat(document.getElementById('hourly-rate').value),
+                bonuses: parseFloat(document.getElementById('bonuses').value),
+                indemnities: parseFloat(document.getElementById('indemnities').value),
+                deductions: parseFloat(document.getElementById('deductions').value)
+            };
+            localStorage.setItem('employees', JSON.stringify(employees));
+            alert('Salaire paramétré.');
+            this.reset();
+        });
+
+        // Déposer congé (Employé)
+        document.getElementById('leave-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const leave = {
+                empId: 'currentEmp', // Simulé, en vrai utiliser ID réel
+                type: document.getElementById('leave-type').value,
+                days: parseInt(document.getElementById('leave-days').value),
+                status: 'En attente'
+            };
+            leaves.push(leave);
+            localStorage.setItem('leaves', JSON.stringify(leaves));
+            alert('Demande déposée.');
+            loadMyLeaves();
+            this.reset();
+        });
+
+        // Charger congés pour admin
+        function loadLeaves() {
+            const tbody = document.querySelector('#leave-table tbody');
+            tbody.innerHTML = '';
+            leaves.forEach((leave, index) => {
+                const row = `<tr>
+                    <td>${leave.empId}</td>
+                    <td>${leave.type}</td>
+                    <td>${leave.days}</td>
+                    <td>${leave.status}</td>
+                    <td><button onclick="approveLeave(${index})">Approuver</button> <button onclick="rejectLeave(${index})">Refuser</button></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Approuver/Refuser congé
+        function approveLeave(index) { leaves[index].status = 'Approuvé'; updateLeaves(); }
+        function rejectLeave(index) { leaves[index].status = 'Refusé'; updateLeaves(); }
+        function updateLeaves() { localStorage.setItem('leaves', JSON.stringify(leaves)); loadLeaves(); }
+
+        // Charger mes congés (Employé)
+        function loadMyLeaves() {
+            const tbody = document.querySelector('#my-leaves tbody');
+            tbody.innerHTML = '';
+            leaves.filter(l => l.empId === 'currentEmp').forEach(leave => {
+                tbody.innerHTML += `<tr><td>${leave.type}</td><td>${leave.days}</td><td>${leave.status}</td></tr>`;
+            });
+        }
+
+        // Calculer salaire (Système)
+        function calculateSalary() {
+            const id = document.getElementById('calc-emp-id').value;
+            const emp = employees[id];
+            if (!emp || !emp.salary) return alert('Employé ou salaire non trouvé.');
+            const sal = emp.salary;
+            const gross = sal.base + (sal.hours * sal.rate) + sal.bonuses + sal.indemnities;
+            const net = gross - sal.deductions;
+            document.getElementById('salary-result').innerHTML = `
+                <h4>Bulletin de Paie pour ${emp.name}</h4>
+                <p>Brut: ${gross}€</p>
+                <p>Net: ${net}€</p>
+                <p>(Simulation - En vrai, générer PDF)</p>
+            `;
+        }
+    </script>
+</body>
+</html>
