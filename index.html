@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNIRH - Gestion RH Universitaire</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="fas fa-university"></i>
+            <h2>UNIRH</h2>
+            <p>Université de Paris</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="active" data-tab="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Tableau de Bord</span>
+                </li>
+                <li data-tab="personnel">
+                    <i class="fas fa-users"></i>
+                    <span>Personnel</span>
+                </li>
+                <li data-tab="salaries">
+                    <i class="fas fa-euro-sign"></i>
+                    <span>Salaires</span>
+                </li>
+                <li data-tab="conges">
+                    <i class="fas fa-umbrella-beach"></i>
+                    <span>Congés</span>
+                </li>
+                <li data-tab="absences">
+                    <i class="fas fa-calendar-times"></i>
+                    <span>Absences</span>
+                </li>
+                <li data-tab="documents">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Documents</span>
+                </li>
+                <li data-tab="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Rapports</span>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="user-profile">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-info">
+                <strong>Admin RH</strong>
+                <small>admin@univ-paris.fr</small>
+            </div>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div>
+                    <h1 id="page-title">Tableau de Bord</h1>
+                    <p id="page-subtitle">Bienvenue dans l'interface de gestion RH</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="global-search" placeholder="Rechercher...">
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" id="notifications-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    <div class="date-display">
+                        <i class="fas fa-calendar"></i>
+                        <span id="current-date"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <!-- Statistics Cards -->
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-employees">0</h3>
+                        <p>Personnel Actif</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-euro-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-salary">0 €</h3>
+                        <p>Masse Salariale</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pending-leaves">0</h3>
+                        <p>Congés en Attente</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="today-absences">0</h3>
+                        <p>Absences Aujourd'hui</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="chart-container large">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-bar"></i> Évolution des Salaires</h3>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> Répartition des Congés</h3>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="leaveChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="activity-container">
+                    <div class="activity-header">
+                        <h3><i class="fas fa-history"></i> Activité Récente</h3>
+                    </div>
+                    <div class="activity-list" id="recent-activity">
+                        <!-- Activités chargées dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3><i class="fas fa-bolt"></i> Actions Rapides</h3>
+                    <div class="actions-grid">
+                        <button class="quick-btn" data-action="add-employee">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Ajouter Employé</span>
+                        </button>
+                        <button class="quick-btn" data-action="add-salary">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Ajouter Salaire</span>
+                        </button>
+                        <button class="quick-btn" data-action="request-leave">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Demander Congé</span>
+                        </button>
+                        <button class="quick-btn" data-action="generate-report">
+                            <i class="fas fa-file-download"></i>
+                            <span>Générer Rapport</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Personnel Management -->
+        <section id="personnel" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-users"></i> Gestion du Personnel</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" id="add-employee-btn">
+                        <i class="fas fa-plus"></i> Ajouter Employé
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filter-department">Département:</label>
+                    <select id="filter-department">
+                        <option value="">Tous</option>
+                        <option value="Informatique">Informatique</option>
+                        <option value="Mathématiques">Mathématiques</option>
+                        <option value="Physique">Physique</option>
+                        <option value="Administration">Administration</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-status">Statut:</label>
+                    <select id="filter-status">
+                        <option value="">Tous</option>
+                        <option value="Actif">Actif</option>
+                        <option value="Inactif">Inactif</option>
+                        <option value="En congé">En congé</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-personnel" placeholder="Rechercher un employé...">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="personnel-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom & Prénom</th>
+                            <th>Email</th>
+                            <th>Département</th>
+                            <th>Poste</th>
+                            <th>Statut</th>
+                            <th>Date Embauche</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Données chargées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Salary Management -->
+        <section id="salaries" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-euro-sign"></i> Gestion des Salaires</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" id="add-salary-btn">
+                        <i class="fas fa-plus"></i> Ajouter Salaire
+                    </button>
+                </div>
+            </div>
+
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <i class="fas fa-calculator"></i>
+                    <div>
+                        <h4>Salaire Moyen</h4>
+                        <p id="avg-salary">0 €</p>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-arrow-down"></i>
+                    <div>
+                        <h4>Salaire Minimum</h4>
+                        <p id="min-salary">0 €</p>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-arrow-up"></i>
+                    <div>
+                        <h4>Salaire Maximum</h4>
+                        <p id="max-salary">0 €</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="salaries-table">
+                    <thead>
+                        <tr>
+                            <th>Employé</th>
+                            <th>Département</th>
+                            <th>Salaire Brut</th>
+                            <th>Déductions</th>
+                            <th>Salaire Net</th>
+                            <th>Mois</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Données chargées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Leave Management -->
+        <section id="conges" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-umbrella-beach"></i> Gestion des Congés</h2>
+                <div class="header-actions">
+                    <button class="btn-secondary">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                    <button class="btn-primary" id="request-leave-btn">
+                        <i class="fas fa-plus"></i> Nouvelle Demande
+                    </button>
+                </div>
+            </div>
+
+            <div class="leave-stats">
+                <div class="leave-stat">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Congés Approuvés</h4>
+                        <p id="approved-leaves">0</p>
+                    </div>
+                </div>
+                <div class="leave-stat">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <h4>En Attente</h4>
+                        <p id="pending-leaves-count">0</p>
+                    </div>
+                </div>
+                <div class="leave-stat">
+                    <i class="fas fa-times-circle"></i>
+                    <div>
+                        <h4>Refusés</h4>
+                        <p id="rejected-leaves">0</p>
+                    </div>
+                </div>
+                <div class="leave-stat">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div>
+                        <h4>Jours Restants</h4>
+                        <p id="remaining-days">25</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="leaves-table">
+                    <thead>
+                        <tr>
+                            <th>Employé</th>
+                            <th>Type</th>
+                            <th>Période</th>
+                            <th>Durée</th>
+                            <th>Statut</th>
+                            <th>Date Demande</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Données chargées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Absence Management -->
+        <section id="absences" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-calendar-times"></i> Gestion des Absences</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" id="add-absence-btn">
+                        <i class="fas fa-plus"></i> Ajouter Absence
+                    </button>
+                </div>
+            </div>
+
+            <div class="absence-types">
+                <div class="type-card">
+                    <div class="type-icon maladie">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h4>Maladie</h4>
+                    <p id="maladie-count">0</p>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon personnel">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h4>Personnel</h4>
+                    <p id="personnel-count">0</p>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon formation">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h4>Formation</h4>
+                    <p id="formation-count">0</p>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon autre">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <h4>Autres</h4>
+                    <p id="autre-count">0</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="absences-table">
+                    <thead>
+                        <tr>
+                            <th>Employé</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Raison</th>
+                            <th>Justifiée</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Données chargées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reports -->
+        <section id="reports" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-bar"></i> Rapports et Statistiques</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" id="generate-report-btn">
+                        <i class="fas fa-download"></i> Exporter Rapport
+                    </button>
+                </div>
+            </div>
+
+            <div class="reports-grid">
+                <div class="report-card">
+                    <div class="report-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <h3>Rapport Salarial</h3>
+                    <p>Analyse complète des salaires par département</p>
+                    <button class="btn-secondary view-report" data-report="salary">
+                        <i class="fas fa-eye"></i> Voir Rapport
+                    </button>
+                </div>
+                
+                <div class="report-card">
+                    <div class="report-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Rapport des Congés</h3>
+                    <p>Statistiques des congés utilisés et restants</p>
+                    <button class="btn-secondary view-report" data-report="leave">
+                        <i class="fas fa-eye"></i> Voir Rapport
+                    </button>
+                </div>
+                
+                <div class="report-card">
+                    <div class="report-icon">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <h3>Rapport d'Absences</h3>
+                    <p>Taux d'absentéisme et motifs d'absence</p>
+                    <button class="btn-secondary view-report" data-report="absence">
+                        <i class="fas fa-eye"></i> Voir Rapport
+                    </button>
+                </div>
+                
+                <div class="report-card">
+                    <div class="report-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Rapport du Personnel</h3>
+                    <p>Distribution du personnel par service et statut</p>
+                    <button class="btn-secondary view-report" data-report="personnel">
+                        <i class="fas fa-eye"></i> Voir Rapport
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Contenu dynamique -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
